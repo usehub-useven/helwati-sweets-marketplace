@@ -2,14 +2,16 @@ import { useState, useMemo, useCallback } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { ProductCard } from "@/components/ProductCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
-import { products as mockProducts, Product } from "@/data/mockData";
-import { Bell, BellOff, RefreshCw } from "lucide-react";
+import { products as mockProducts, Product, categories } from "@/data/mockData";
+import { Bell, BellOff, RefreshCw, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Notification {
   id: string;
@@ -27,6 +29,7 @@ const mockNotifications: Notification[] = [
 
 export const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [productList, setProductList] = useState<Product[]>(mockProducts);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
@@ -54,10 +57,33 @@ export const Home = () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
   const filteredProducts = useMemo(() => {
-    if (!selectedCategory) return productList;
-    return productList.filter((p) => p.category === selectedCategory);
-  }, [selectedCategory, productList]);
+    let filtered = productList;
+
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const titleMatch = p.title.toLowerCase().includes(query);
+        const categoryName = categories.find(c => c.id === p.category)?.name?.toLowerCase() || "";
+        const categoryMatch = categoryName.includes(query);
+        return titleMatch || categoryMatch;
+      });
+    }
+
+    return filtered;
+  }, [selectedCategory, productList, searchQuery]);
+
+  const isSearchActive = searchQuery.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -134,6 +160,26 @@ export const Home = () => {
             </div>
           </div>
 
+          {/* Search Input */}
+          <div className="relative mb-4">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="ابحث عن حلوى..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 pl-10 h-12 rounded-xl bg-card border-border/50 text-foreground placeholder:text-muted-foreground"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute left-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
           {/* Categories */}
           <CategoryFilter
             selected={selectedCategory}
@@ -156,20 +202,37 @@ export const Home = () => {
               </div>
             ))}
           </div>
-        ) : (
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-4">
             {filteredProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
-        )}
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <span className="text-6xl mb-4 block">🍰</span>
-            <p className="text-muted-foreground">
-              لا توجد حلويات في هذه الفئة حالياً
+        ) : (
+          <div className="text-center py-16">
+            <span className="text-6xl mb-4 block">🔍</span>
+            <p className="text-foreground font-medium mb-2">
+              {isSearchActive 
+                ? "عذراً، لم نجد أي حلوى بهذا الاسم"
+                : "لا توجد حلويات في هذه الفئة حالياً"
+              }
             </p>
+            <p className="text-muted-foreground text-sm mb-6">
+              {isSearchActive 
+                ? `لا توجد نتائج لـ "${searchQuery}"`
+                : "جرب اختيار فئة أخرى"
+              }
+            </p>
+            {isSearchActive && (
+              <Button
+                onClick={clearSearch}
+                variant="outline"
+                className="rounded-xl"
+              >
+                <X className="h-4 w-4 ml-2" />
+                مسح البحث
+              </Button>
+            )}
           </div>
         )}
       </main>
