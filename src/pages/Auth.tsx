@@ -60,13 +60,10 @@ const Auth = () => {
         toast.success("تم تسجيل الدخول بنجاح!");
         navigate("/home");
       } else {
-        const redirectUrl = `${window.location.origin}/`;
-
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: redirectUrl,
             data: {
               full_name: formData.fullName,
             },
@@ -82,7 +79,17 @@ const Auth = () => {
           return;
         }
 
-        toast.success("تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني");
+        // Create profile for new user
+        if (data.user) {
+          await supabase.from("profiles").insert({
+            id: data.user.id,
+            full_name: formData.fullName,
+            role: "buyer",
+          });
+        }
+
+        toast.success("تم إنشاء الحساب بنجاح!");
+        navigate("/home");
       }
     } catch (error) {
       toast.error("حدث خطأ، يرجى المحاولة مرة أخرى");
