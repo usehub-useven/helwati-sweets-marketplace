@@ -11,7 +11,20 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsAnimating(true);
+    setLiked(!liked);
+    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    
+    setTimeout(() => setIsAnimating(false), 300);
+  };
 
   return (
     <Link
@@ -40,18 +53,20 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           
           {/* Like Button */}
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setLiked(!liked);
-            }}
+            onClick={handleLike}
             className={cn(
-              "absolute top-3 left-3 p-2 rounded-full glass transition-all duration-300",
+              "absolute top-3 left-3 p-2 rounded-full glass transition-all duration-300 flex items-center gap-1",
               liked ? "text-destructive bg-destructive/20" : "text-foreground/70"
             )}
           >
             <Heart
-              className={cn("h-5 w-5", liked && "fill-current")}
+              className={cn(
+                "h-5 w-5 transition-transform duration-300",
+                liked && "fill-current",
+                isAnimating && "scale-125"
+              )}
             />
+            <span className="text-xs font-medium">{likeCount}</span>
           </button>
 
           {/* Price Tag */}
