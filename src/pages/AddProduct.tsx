@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Lock, Upload, Loader2, ImagePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { categories } from "@/data/mockData";
+import { triggerHaptic } from "@/lib/haptics";
 
 const compressImage = async (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -149,6 +150,8 @@ export const AddProduct = () => {
 
       if (insertError) throw insertError;
 
+      // Trigger haptic feedback on success
+      triggerHaptic(10);
       toast.success("تم إضافة المنتج بنجاح!");
       navigate("/profile");
     } catch (error: any) {

@@ -122,8 +122,25 @@
 }
 
 @layer utilities {
+  /* Apple-style Glassmorphism */
   .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+    @apply backdrop-blur-xl border-t border-white/20;
+    background: rgba(255, 255, 255, 0.8);
+  }
+  
+  .glass-nav {
+    @apply backdrop-blur-xl border-t border-white/20;
+    background: rgba(255, 255, 255, 0.8);
+  }
+  
+  .dark .glass {
+    background: rgba(30, 27, 24, 0.8);
+    @apply border-white/10;
+  }
+  
+  .dark .glass-nav {
+    background: rgba(30, 27, 24, 0.8);
+    @apply border-white/10;
   }
   
   .glass-card {

@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { createLikeNotification } from "@/lib/notifications";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface ProductCardProps {
   product: {
@@ -22,6 +24,12 @@ interface ProductCardProps {
   };
   index?: number;
 }
+
+const springTransition = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 17,
+};
 
 export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const [liked, setLiked] = useState(false);
@@ -64,6 +72,8 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       return;
     }
 
+    // Trigger haptic feedback
+    triggerHaptic(10);
     setIsAnimating(true);
     
     if (liked) {
@@ -105,75 +115,80 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   };
 
   return (
-    <Link
-      to={`/product/${product.id}`}
-      className="block animate-fade-in-up"
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      transition={springTransition}
+      className="animate-fade-in-up"
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      <div className="glass-card rounded-2xl overflow-hidden group hover:shadow-elevated transition-all duration-500 hover:-translate-y-1">
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden">
-          <div
-            className={cn(
-              "absolute inset-0 bg-muted animate-pulse",
-              imageLoaded && "hidden"
-            )}
-          />
-          <img
-            src={product.image}
-            alt={product.title}
-            className={cn(
-              "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",
-              !imageLoaded && "opacity-0"
-            )}
-            onLoad={() => setImageLoaded(true)}
-          />
-          
-          {/* Like Button */}
-          <button
-            onClick={handleLike}
-            className={cn(
-              "absolute top-3 left-3 p-2 rounded-full glass transition-all duration-300 flex items-center gap-1",
-              liked ? "text-destructive bg-destructive/20" : "text-foreground/70"
-            )}
-          >
-            <Heart
+      <Link to={`/product/${product.id}`} className="block">
+        <div className="glass-card rounded-2xl overflow-hidden group hover:shadow-elevated transition-all duration-500 hover:-translate-y-1">
+          {/* Image */}
+          <div className="relative aspect-square overflow-hidden">
+            <div
               className={cn(
-                "h-5 w-5 transition-transform duration-300",
-                liked && "fill-current",
-                isAnimating && "scale-125"
+                "absolute inset-0 bg-muted animate-pulse",
+                imageLoaded && "hidden"
               )}
             />
-            <span className="text-xs font-medium">{likeCount}</span>
-          </button>
-
-          {/* Price Tag */}
-          <div className="absolute bottom-3 right-3 gradient-gold text-accent-foreground px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-            {product.price.toLocaleString()} د.ج
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="font-bold text-lg mb-1 text-foreground">
-            {product.title}
-          </h3>
-          
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <img
-              src={product.seller.avatar}
-              alt={product.seller.name}
-              className="w-5 h-5 rounded-full object-cover"
+              src={product.image}
+              alt={product.title}
+              className={cn(
+                "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",
+                !imageLoaded && "opacity-0"
+              )}
+              onLoad={() => setImageLoaded(true)}
             />
-            <span>{product.seller.name}</span>
+            
+            {/* Like Button */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={springTransition}
+              onClick={handleLike}
+              className={cn(
+                "absolute top-3 left-3 p-2 rounded-full glass transition-all duration-300 flex items-center gap-1",
+                liked ? "text-destructive bg-destructive/20" : "text-foreground/70"
+              )}
+            >
+              <Heart
+                className={cn(
+                  "h-5 w-5 transition-transform duration-300",
+                  liked && "fill-current",
+                  isAnimating && "scale-125"
+                )}
+              />
+              <span className="text-xs font-medium">{likeCount}</span>
+            </motion.button>
+
+            {/* Price Tag */}
+            <div className="absolute bottom-3 right-3 gradient-gold text-accent-foreground px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+              {product.price.toLocaleString()} د.ج
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 mt-2 text-muted-foreground text-xs">
-            <MapPin className="h-3 w-3" />
-            <span>{product.seller.wilaya}</span>
+          {/* Content */}
+          <div className="p-4">
+            <h3 className="font-bold text-lg mb-1 text-foreground">
+              {product.title}
+            </h3>
+            
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <img
+                src={product.seller.avatar}
+                alt={product.seller.name}
+                className="w-5 h-5 rounded-full object-cover"
+              />
+              <span>{product.seller.name}</span>
+            </div>
+
+            <div className="flex items-center gap-1 mt-2 text-muted-foreground text-xs">
+              <MapPin className="h-3 w-3" />
+              <span>{product.seller.wilaya}</span>
+            </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 };

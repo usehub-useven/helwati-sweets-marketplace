@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductCardSkeleton } from "@/components/ProductCardSkeleton";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { products as mockProducts, Product, categories } from "@/data/mockData";
 import { Bell, BellOff, RefreshCw, Search, Trash2, X } from "lucide-react";
@@ -18,6 +19,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+const springTransition = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 17,
+};
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -120,8 +127,8 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 glass border-b border-border/50">
+      {/* Header - Apple-style Glassmorphism */}
+      <header className="sticky top-0 z-40 glass-nav border-b border-white/20">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -133,25 +140,29 @@ export const Home = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                transition={springTransition}
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="relative p-3 rounded-xl bg-card border border-border/50 hover:bg-muted transition-colors disabled:opacity-50"
+                className="relative p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 hover:bg-muted transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={cn("h-5 w-5 text-foreground", isRefreshing && "animate-spin")} />
-              </button>
+              </motion.button>
               
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <button 
-                    className="relative p-3 rounded-xl bg-card border border-border/50 hover:bg-muted transition-colors"
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }}
+                    transition={springTransition}
+                    className="relative p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 hover:bg-muted transition-colors"
                     onClick={() => markAllAsRead()}
                   >
                     <Bell className="h-5 w-5 text-foreground" />
                     {unreadCount > 0 && (
                       <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full animate-pulse" />
                     )}
-                  </button>
+                  </motion.button>
                 </PopoverTrigger>
                 <PopoverContent 
                   align="end" 
@@ -260,14 +271,8 @@ export const Home = () => {
       <main className="px-4 py-6">
         {isRefreshing ? (
           <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="glass-card rounded-2xl overflow-hidden">
-                <div className="aspect-square bg-muted animate-pulse" />
-                <div className="p-4 space-y-2">
-                  <div className="h-5 bg-muted animate-pulse rounded" />
-                  <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
-                </div>
-              </div>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
