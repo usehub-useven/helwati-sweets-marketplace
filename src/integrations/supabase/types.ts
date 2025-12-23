@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string | null
+          title: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          title?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          title?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_likes: {
         Row: {
           created_at: string | null
