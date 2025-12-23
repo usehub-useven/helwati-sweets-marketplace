@@ -50,7 +50,7 @@ export const MyProductsSection = ({ userId }: MyProductsSectionProps) => {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold text-foreground">منشوراتي 📦</h3>
         <Button asChild size="sm" className="rounded-xl gradient-gold text-accent-foreground">
-          <Link to="/add-product">
+          <Link to="/add">
             <Plus className="h-4 w-4 ml-1" />
             إضافة
           </Link>
@@ -100,7 +100,7 @@ export const MyProductsSection = ({ userId }: MyProductsSectionProps) => {
             لم تنشر أي منتجات بعد
           </p>
           <Button asChild className="rounded-xl gradient-gold text-accent-foreground">
-            <Link to="/add-product">
+            <Link to="/add">
               <Plus className="h-4 w-4 ml-2" />
               أضف منتجك الأول
             </Link>
