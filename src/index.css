@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap");
 
 @layer base {
   :root {
-    --background: 40 33% 98%;
+    --background: 40 33% 98%; /* Creamy White */
     --foreground: 30 10% 25%;
 
     --card: 40 30% 97%;
@@ -15,7 +15,7 @@
     --popover: 40 30% 97%;
     --popover-foreground: 30 10% 25%;
 
-    --primary: 0 45% 85%;
+    --primary: 0 45% 85%; /* Soft Rose */
     --primary-foreground: 30 10% 20%;
 
     --secondary: 35 50% 95%;
@@ -24,7 +24,7 @@
     --muted: 30 20% 92%;
     --muted-foreground: 30 10% 45%;
 
-    --accent: 38 60% 55%;
+    --accent: 38 60% 55%; /* Gold */
     --accent-foreground: 40 33% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -39,69 +39,39 @@
     /* Custom design tokens */
     --rose-soft: 0 45% 85%;
     --rose-deep: 0 40% 70%;
-    --cream: 40 33% 98%;
-    --cream-dark: 35 25% 90%;
     --gold: 38 60% 55%;
-    --gold-light: 38 70% 70%;
-    --bronze: 30 50% 40%;
-    
+
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(0 45% 85%), hsl(35 50% 95%));
     --gradient-gold: linear-gradient(135deg, hsl(38 60% 55%), hsl(38 70% 70%));
-    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
-    
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(0 45% 85% / 0.3);
-    --shadow-card: 0 8px 30px -8px hsl(30 20% 50% / 0.15);
-    --shadow-elevated: 0 20px 40px -10px hsl(30 20% 50% / 0.2);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Shadows - Updated for softer, premium feel */
+    --shadow-soft: 0 8px 30px -4px rgba(238, 200, 200, 0.3); /* Rose tinted shadow */
+    --shadow-card: 0 10px 40px -10px rgba(180, 160, 150, 0.15); /* Warm shadow */
+    --shadow-elevated: 0 25px 50px -12px rgba(100, 90, 80, 0.25);
   }
 
   .dark {
+    /* ... (Dark mode variables kept same, less priority now) ... */
     --background: 30 15% 10%;
     --foreground: 40 20% 95%;
-
     --card: 30 15% 12%;
     --card-foreground: 40 20% 95%;
-
     --popover: 30 15% 12%;
     --popover-foreground: 40 20% 95%;
-
     --primary: 0 45% 75%;
     --primary-foreground: 30 15% 10%;
-
     --secondary: 30 20% 18%;
     --secondary-foreground: 40 20% 95%;
-
     --muted: 30 15% 20%;
     --muted-foreground: 30 15% 60%;
-
     --accent: 38 60% 55%;
     --accent-foreground: 30 15% 10%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 30 15% 20%;
     --input: 30 15% 20%;
     --ring: 0 45% 65%;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -111,117 +81,77 @@
   }
 
   html {
-    font-family: 'Tajawal', sans-serif;
+    font-family: "Tajawal", sans-serif;
+    -webkit-tap-highlight-color: transparent; /* Remove blue highlight on tap */
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Tajawal', sans-serif;
+    font-family: "Tajawal", sans-serif;
     direction: rtl;
+    /* Font smoothing for crisp text */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer utilities {
-  /* Apple-style Glassmorphism */
+  /* 🍎 THE APPLE FORMULA: Glassmorphism Updated */
+
   .glass {
-    @apply backdrop-blur-xl border-t border-white/20;
-    background: rgba(255, 255, 255, 0.8);
+    /* Lower opacity (0.7) to see through + Saturation boost */
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
-  
+
   .glass-nav {
-    @apply backdrop-blur-xl border-t border-white/20;
-    background: rgba(255, 255, 255, 0.8);
+    /* Fixed/Sticky headers need strong blur */
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
   }
-  
-  .dark .glass {
-    background: rgba(30, 27, 24, 0.8);
-    @apply border-white/10;
-  }
-  
-  .dark .glass-nav {
-    background: rgba(30, 27, 24, 0.8);
-    @apply border-white/10;
-  }
-  
+
   .glass-card {
-    @apply bg-white/80 backdrop-blur-lg border border-white/30 shadow-[var(--shadow-card)];
+    /* Cards need to be subtle */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); /* Very subtle purple tint shadow */
   }
-  
-  .gradient-primary {
-    background: var(--gradient-primary);
+
+  /* Hide scrollbar but keep functionality (good for mobile lists) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
-  
-  .gradient-gold {
-    background: var(--gradient-gold);
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
-  
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-  
-  .shadow-elevated {
-    box-shadow: var(--shadow-elevated);
-  }
-  
+
   .text-gradient-gold {
     @apply bg-clip-text text-transparent;
     background: var(--gradient-gold);
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-muted/50;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-primary/30 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary/50;
-}
-
-/* Animation classes */
+/* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
+  0%,
+  100% {
     transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
   }
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
+  animation: float 4s ease-in-out infinite;
 }
