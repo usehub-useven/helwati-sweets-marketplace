@@ -68,21 +68,29 @@ export const AddProduct = () => {
   });
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      setLoading(false);
-    };
-    checkUser();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user || null);
+        setLoading(false);
+        
+        // Redirect to auth if not logged in
+        if (!session?.user && !loading) {
+          navigate("/auth");
+        }
       }
     );
 
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      setLoading(false);
+      
+      if (!session?.user) {
+        navigate("/auth");
+      }
+    });
+
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -142,7 +150,7 @@ export const AddProduct = () => {
       if (insertError) throw insertError;
 
       toast.success("تم إضافة المنتج بنجاح!");
-      navigate("/home");
+      navigate("/profile");
     } catch (error: any) {
       console.error("Error adding product:", error);
       toast.error("حدث خطأ أثناء إضافة المنتج");
