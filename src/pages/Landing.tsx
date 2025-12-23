@@ -164,40 +164,41 @@ export const Landing = () => {
         </div>
 
         {/* Liquid Gem CTA Button */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="relative"
-        >
-          {/* Button Glow */}
-          <div 
-            className="absolute inset-0 rounded-full blur-2xl opacity-60 animate-glow-pulse"
-            style={{
-              background: "linear-gradient(135deg, #be123c 0%, #7e22ce 50%, #fda4af 100%)",
-            }}
-          />
-          
-          <Button
-            onClick={() => navigate("/auth")}
-            className="relative w-full h-16 rounded-full text-lg font-bold overflow-hidden
-              animate-liquid"
-            style={{
-              background: "linear-gradient(135deg, #be123c 0%, #7e22ce 33%, #fda4af 66%, #be123c 100%)",
-              backgroundSize: "300% 300%",
-              border: "1px solid rgba(255,255,255,0.3)",
-              boxShadow: "inset 0 2px 10px rgba(255,255,255,0.4), 0 10px 30px rgba(190, 18, 60, 0.4)",
-            }}
+        <div className="flex justify-center">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="relative inline-flex"
           >
-            <span 
-              className="relative z-10 text-white"
+            {/* Button Glow */}
+            <div 
+              className="absolute inset-0 rounded-full blur-2xl opacity-60 animate-glow-pulse"
               style={{
-                textShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.2)",
+                background: "linear-gradient(135deg, #be123c 0%, #7e22ce 50%, #fda4af 100%)",
+              }}
+            />
+            
+            <Button
+              onClick={() => navigate("/auth")}
+              className="relative inline-flex items-center justify-center gap-3 px-12 py-4 h-auto rounded-full text-lg font-bold overflow-hidden animate-liquid"
+              style={{
+                background: "linear-gradient(135deg, #be123c 0%, #7e22ce 33%, #fda4af 66%, #be123c 100%)",
+                backgroundSize: "300% 300%",
+                border: "1px solid rgba(255,255,255,0.3)",
+                boxShadow: "inset 0 2px 10px rgba(255,255,255,0.4), 0 10px 30px rgba(190, 18, 60, 0.4)",
               }}
             >
-              ابدأ الآن
-            </span>
-          </Button>
-        </motion.div>
+              <span 
+                className="relative z-10 text-white"
+                style={{
+                  textShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.2)",
+                }}
+              >
+                ابدأ الآن
+              </span>
+            </Button>
+          </motion.div>
+        </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           أكثر من 500+ صانعة حلويات في انتظارك 🍰
