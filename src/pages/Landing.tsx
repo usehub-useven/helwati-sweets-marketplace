@@ -201,7 +201,7 @@ export const Landing = () => {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          أكثر من 500+ صانعة حلويات في انتظارك 🍰
+          أكثر من 500+ صانعة حلويات في انتظارك 
         </p>
       </div>
     </div>
