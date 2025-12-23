@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ChefHat, Heart, MapPin, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { HeroCarousel } from "@/components/HeroCarousel";
 const features = [
   {
     icon: ChefHat,
@@ -44,30 +44,9 @@ export const Landing = () => {
           </p>
         </div>
 
-        {/* Illustration */}
-        <div className="relative h-48 mb-12">
-          <div className="absolute inset-0 flex items-center justify-center gap-4">
-            {[
-              "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200",
-              "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=200",
-              "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200",
-            ].map((img, i) => (
-              <div
-                key={i}
-                className="w-28 h-28 rounded-2xl overflow-hidden shadow-elevated animate-fade-in-up"
-                style={{ 
-                  animationDelay: `${i * 200}ms`,
-                  transform: `rotate(${(i - 1) * 8}deg)`,
-                }}
-              >
-                <img
-                  src={img}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
+        {/* 3D Hero Carousel */}
+        <div className="mb-12">
+          <HeroCarousel />
         </div>
 
         {/* Features */}
