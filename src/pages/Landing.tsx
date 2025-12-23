@@ -1,22 +1,33 @@
 import { Button } from "@/components/ui/button";
-import { ChefHat, Heart, MapPin, MessageCircle } from "lucide-react";
+import { ChefHat, MapPin, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { motion } from "framer-motion";
+
 const features = [
   {
     icon: ChefHat,
     title: "صانعات محترفات",
     description: "تواصل مع أفضل صانعات الحلويات في الجزائر",
+    glowColor: "hover:border-amber-400 hover:shadow-amber-400/30",
+    iconColor: "text-amber-500",
+    bgGlow: "group-hover:bg-amber-400/10",
   },
   {
     icon: MapPin,
     title: "قريب منك",
     description: "اعثر على الحلويات اللذيذة في ولايتك",
+    glowColor: "hover:border-sky-400 hover:shadow-sky-400/30",
+    iconColor: "text-sky-500",
+    bgGlow: "group-hover:bg-sky-400/10",
   },
   {
     icon: MessageCircle,
     title: "تواصل مباشر",
     description: "اطلب مباشرة عبر واتساب بكل سهولة",
+    glowColor: "hover:border-green-500 hover:shadow-green-500/30",
+    iconColor: "text-green-500",
+    bgGlow: "group-hover:bg-green-400/10",
   },
 ];
 
@@ -49,33 +60,48 @@ export const Landing = () => {
           <HeroCarousel />
         </div>
 
-        {/* Features */}
+        {/* Interactive Feature Cards */}
         <div className="space-y-4 mb-12">
           {features.map((feature, i) => (
-            <div
+            <motion.div
               key={i}
-              className="glass-card rounded-2xl p-4 flex items-center gap-4 animate-fade-in-up"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`group glass-card rounded-2xl p-4 flex items-center gap-4 animate-fade-in-up cursor-pointer
+                border-2 border-transparent transition-all duration-300 hover:shadow-lg
+                ${feature.glowColor}`}
               style={{ animationDelay: `${(i + 3) * 100}ms` }}
             >
-              <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center">
-                <feature.icon className="h-6 w-6 text-accent-foreground" />
+              <div className={`relative w-12 h-12 rounded-xl bg-white/80 flex items-center justify-center transition-colors duration-300 ${feature.bgGlow}`}>
+                <feature.icon className={`h-6 w-6 transition-colors duration-300 ${feature.iconColor}`} />
               </div>
               <div>
                 <h3 className="font-bold text-foreground">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        {/* CTA Button */}
-        <Button
-          onClick={() => navigate("/auth")}
-          className="w-full h-14 rounded-2xl gradient-gold text-accent-foreground text-lg font-bold shadow-elevated hover:shadow-soft transition-all duration-300 hover:scale-[1.02]"
+        {/* Living Gradient CTA Button */}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className="animate-pulse-slow"
         >
-          <Heart className="h-5 w-5 ml-2" />
-          ابدأ الآن
-        </Button>
+          <Button
+            onClick={() => navigate("/auth")}
+            className="w-full h-14 rounded-full text-white text-lg font-bold shadow-lg shadow-rose-500/40
+              bg-[length:200%_200%] animate-gradient-x transition-all duration-300
+              hover:shadow-xl hover:shadow-purple-500/40"
+            style={{
+              background: "linear-gradient(90deg, #E11D48, #7C3AED, #F59E0B, #E11D48)",
+              backgroundSize: "200% 200%",
+            }}
+          >
+            ابدأ الآن
+          </Button>
+        </motion.div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           أكثر من 500+ صانعة حلويات في انتظارك 🍰
