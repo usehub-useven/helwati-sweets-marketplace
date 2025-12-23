@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductCardSkeleton } from "@/components/ProductCardSkeleton";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { HeroCarousel } from "@/components/HeroCarousel";
 import { products as mockProducts, Product, categories } from "@/data/mockData";
 import { Bell, BellOff, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -279,8 +280,13 @@ export const Home = () => {
         </div>
       </header>
 
+      {/* Hero Carousel */}
+      <section className="py-6">
+        <HeroCarousel />
+      </section>
+
       {/* Products Grid */}
-      <main className="px-4 pt-4">
+      <main className="px-4">
         {isRefreshing ? (
           // Skeleton Loading Grid
           <div className="grid grid-cols-2 gap-4">
