@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
 import { ProductCard } from "@/components/ProductCard";
@@ -14,21 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-
-interface Notification {
-  id: string;
-  message: string;
-  timeAgo: string;
-  isRead: boolean;
-  targetPath: string;
-}
-
-const mockNotifications: Notification[] = [
-  { id: "1", message: "تم قبول طلبك للكيكة بنجاح ✅", timeAgo: "منذ دقيقتين", isRead: false, targetPath: "/profile" },
-  { id: "2", message: "عرض خاص: تخفيض 20% على البقلاوة 🔥", timeAgo: "منذ ساعة", isRead: false, targetPath: "/product/2" },
-  { id: "3", message: "أم سارة أضافت منتج جديد 🍰", timeAgo: "منذ 3 ساعات", isRead: true, targetPath: "/seller/1" },
-  { id: "4", message: "مرحباً بك في تطبيق حلوتي 👋", timeAgo: "منذ يوم", isRead: true, targetPath: "/home" },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -36,10 +25,32 @@ export const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [productList, setProductList] = useState<Product[]>(mockProducts);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUserId(session?.user?.id || null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setCurrentUserId(session?.user?.id || null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAll,
+  } = useNotifications(currentUserId);
 
   const shuffleArray = (array: Product[]) => {
     const shuffled = [...array];
@@ -58,30 +69,15 @@ export const Home = () => {
     }, 1500);
   }, []);
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
   const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
-    );
-    // Close popover and navigate
+    markAsRead(notification.id);
     setIsPopoverOpen(false);
-    navigate(notification.targetPath);
+    if (notification.link) {
+      navigate(notification.link);
+    }
   };
 
   const handleSwipeEnd = (id: string, info: PanInfo) => {
-    // If swiped far enough to the left (threshold: -100px)
     if (info.offset.x < -100) {
       deleteNotification(id);
     }
@@ -91,15 +87,22 @@ export const Home = () => {
     setSearchQuery("");
   };
 
+  const formatTimeAgo = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ar });
+    } catch {
+      return "";
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     let filtered = productList;
 
-    // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter((p) => p.category === selectedCategory);
     }
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.trim().toLowerCase();
       filtered = filtered.filter((p) => {
@@ -142,7 +145,7 @@ export const Home = () => {
                 <PopoverTrigger asChild>
                   <button 
                     className="relative p-3 rounded-xl bg-card border border-border/50 hover:bg-muted transition-colors"
-                    onClick={markAllAsRead}
+                    onClick={() => markAllAsRead()}
                   >
                     <Bell className="h-5 w-5 text-foreground" />
                     {unreadCount > 0 && (
@@ -158,7 +161,7 @@ export const Home = () => {
                     <h3 className="font-bold text-foreground">الإشعارات</h3>
                     {notifications.length > 0 && (
                       <button
-                        onClick={clearAllNotifications}
+                        onClick={clearAll}
                         className="text-xs text-destructive hover:text-destructive/80 transition-colors font-medium"
                       >
                         حذف الكل
@@ -178,12 +181,12 @@ export const Home = () => {
                             exit={{ opacity: 0, x: -200, transition: { duration: 0.2 } }}
                             className="relative overflow-hidden"
                           >
-                            {/* Delete background (revealed on swipe) */}
+                            {/* Delete background */}
                             <div className="absolute inset-0 bg-destructive flex items-center justify-end px-6">
                               <Trash2 className="h-5 w-5 text-destructive-foreground" />
                             </div>
                             
-                            {/* Notification card (swipeable) */}
+                            {/* Notification card */}
                             <motion.div
                               drag="x"
                               dragDirectionLock
@@ -192,15 +195,20 @@ export const Home = () => {
                               onDragEnd={(_, info) => handleSwipeEnd(notification.id, info)}
                               className={cn(
                                 "relative p-4 border-b border-border/50 last:border-0 transition-colors cursor-pointer bg-card",
-                                !notification.isRead && "bg-primary/5"
+                                !notification.is_read && "bg-primary/5"
                               )}
                               onClick={() => handleNotificationClick(notification)}
                             >
-                              <p className="text-sm text-foreground leading-relaxed">
+                              {notification.title && (
+                                <p className="text-sm font-medium text-foreground mb-1">
+                                  {notification.title}
+                                </p>
+                              )}
+                              <p className="text-sm text-foreground/80 leading-relaxed">
                                 {notification.message}
                               </p>
                               <span className="text-xs text-muted-foreground mt-1 block">
-                                {notification.timeAgo}
+                                {formatTimeAgo(notification.created_at)}
                               </span>
                             </motion.div>
                           </motion.div>

@@ -1,27 +1,105 @@
 import { Heart, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Product } from "@/data/mockData";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { createLikeNotification } from "@/lib/notifications";
+import { toast } from "sonner";
 
 interface ProductCardProps {
-  product: Product;
+  product: {
+    id: string;
+    title: string;
+    price: number;
+    image: string;
+    category: string;
+    seller: {
+      id: string;
+      name: string;
+      avatar: string;
+      wilaya: string;
+    };
+  };
   index?: number;
 }
 
 export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
+  const [likeCount, setLikeCount] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const handleLike = (e: React.MouseEvent) => {
+  useEffect(() => {
+    // Get current user
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUserId(session?.user?.id || null);
+    });
+
+    // Check if user has liked this product and get like count
+    const checkLikeStatus = async () => {
+      const { data: likes, error } = await supabase
+        .from("product_likes")
+        .select("user_id")
+        .eq("product_id", product.id);
+
+      if (!error && likes) {
+        setLikeCount(likes.length);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setLiked(likes.some(like => like.user_id === session.user.id));
+        }
+      }
+    };
+
+    checkLikeStatus();
+  }, [product.id]);
+
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    if (!currentUserId) {
+      toast.error("يرجى تسجيل الدخول أولاً");
+      return;
+    }
+
     setIsAnimating(true);
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    
+    if (liked) {
+      // Unlike
+      const { error } = await supabase
+        .from("product_likes")
+        .delete()
+        .eq("product_id", product.id)
+        .eq("user_id", currentUserId);
+
+      if (!error) {
+        setLiked(false);
+        setLikeCount(prev => Math.max(0, prev - 1));
+      }
+    } else {
+      // Like
+      const { error } = await supabase
+        .from("product_likes")
+        .insert({
+          product_id: product.id,
+          user_id: currentUserId,
+        });
+
+      if (!error) {
+        setLiked(true);
+        setLikeCount(prev => prev + 1);
+        
+        // Create notification for product owner
+        await createLikeNotification({
+          productOwnerId: product.seller.id,
+          actorId: currentUserId,
+          productTitle: product.title,
+          productId: product.id,
+        });
+      }
+    }
     
     setTimeout(() => setIsAnimating(false), 300);
   };
