@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
 import { ProductCard } from "@/components/ProductCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { products as mockProducts, Product, categories } from "@/data/mockData";
-import { Bell, BellOff, RefreshCw, Search, X } from "lucide-react";
+import { Bell, BellOff, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -12,27 +13,31 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 
 interface Notification {
   id: string;
   message: string;
   timeAgo: string;
   isRead: boolean;
+  targetPath: string;
 }
 
 const mockNotifications: Notification[] = [
-  { id: "1", message: "تم قبول طلبك للكيكة بنجاح ✅", timeAgo: "منذ دقيقتين", isRead: false },
-  { id: "2", message: "عرض خاص: تخفيض 20% على البقلاوة 🔥", timeAgo: "منذ ساعة", isRead: false },
-  { id: "3", message: "أم سارة أضافت منتج جديد 🍰", timeAgo: "منذ 3 ساعات", isRead: true },
-  { id: "4", message: "مرحباً بك في تطبيق حلوتي 👋", timeAgo: "منذ يوم", isRead: true },
+  { id: "1", message: "تم قبول طلبك للكيكة بنجاح ✅", timeAgo: "منذ دقيقتين", isRead: false, targetPath: "/profile" },
+  { id: "2", message: "عرض خاص: تخفيض 20% على البقلاوة 🔥", timeAgo: "منذ ساعة", isRead: false, targetPath: "/product/2" },
+  { id: "3", message: "أم سارة أضافت منتج جديد 🍰", timeAgo: "منذ 3 ساعات", isRead: true, targetPath: "/seller/1" },
+  { id: "4", message: "مرحباً بك في تطبيق حلوتي 👋", timeAgo: "منذ يوم", isRead: true, targetPath: "/home" },
 ];
 
 export const Home = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [productList, setProductList] = useState<Product[]>(mockProducts);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -55,6 +60,31 @@ export const Home = () => {
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    setNotifications(prev => 
+      prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
+    );
+    // Close popover and navigate
+    setIsPopoverOpen(false);
+    navigate(notification.targetPath);
+  };
+
+  const handleSwipeEnd = (id: string, info: PanInfo) => {
+    // If swiped far enough to the left (threshold: -100px)
+    if (info.offset.x < -100) {
+      deleteNotification(id);
+    }
   };
 
   const clearSearch = () => {
@@ -108,7 +138,7 @@ export const Home = () => {
                 <RefreshCw className={cn("h-5 w-5 text-foreground", isRefreshing && "animate-spin")} />
               </button>
               
-              <Popover>
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <button 
                     className="relative p-3 rounded-xl bg-card border border-border/50 hover:bg-muted transition-colors"
@@ -122,30 +152,60 @@ export const Home = () => {
                 </PopoverTrigger>
                 <PopoverContent 
                   align="end" 
-                  className="w-80 p-0 bg-card border border-border shadow-elevated rounded-2xl z-50"
+                  className="w-80 p-0 bg-card border border-border shadow-elevated rounded-2xl z-50 overflow-hidden"
                 >
-                  <div className="p-4 border-b border-border">
+                  <div className="p-4 border-b border-border flex items-center justify-between">
                     <h3 className="font-bold text-foreground">الإشعارات</h3>
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearAllNotifications}
+                        className="text-xs text-destructive hover:text-destructive/80 transition-colors font-medium"
+                      >
+                        حذف الكل
+                      </button>
+                    )}
                   </div>
                   
                   {notifications.length > 0 ? (
-                    <div className="max-h-72 overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={cn(
-                            "p-4 border-b border-border/50 last:border-0 transition-colors hover:bg-muted/50",
-                            !notification.isRead && "bg-primary/5"
-                          )}
-                        >
-                          <p className="text-sm text-foreground leading-relaxed">
-                            {notification.message}
-                          </p>
-                          <span className="text-xs text-muted-foreground mt-1 block">
-                            {notification.timeAgo}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="max-h-72 overflow-y-auto overflow-x-hidden">
+                      <AnimatePresence mode="popLayout">
+                        {notifications.map((notification) => (
+                          <motion.div
+                            key={notification.id}
+                            layout
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -200, transition: { duration: 0.2 } }}
+                            className="relative overflow-hidden"
+                          >
+                            {/* Delete background (revealed on swipe) */}
+                            <div className="absolute inset-0 bg-destructive flex items-center justify-end px-6">
+                              <Trash2 className="h-5 w-5 text-destructive-foreground" />
+                            </div>
+                            
+                            {/* Notification card (swipeable) */}
+                            <motion.div
+                              drag="x"
+                              dragDirectionLock
+                              dragConstraints={{ left: -120, right: 0 }}
+                              dragElastic={0.1}
+                              onDragEnd={(_, info) => handleSwipeEnd(notification.id, info)}
+                              className={cn(
+                                "relative p-4 border-b border-border/50 last:border-0 transition-colors cursor-pointer bg-card",
+                                !notification.isRead && "bg-primary/5"
+                              )}
+                              onClick={() => handleNotificationClick(notification)}
+                            >
+                              <p className="text-sm text-foreground leading-relaxed">
+                                {notification.message}
+                              </p>
+                              <span className="text-xs text-muted-foreground mt-1 block">
+                                {notification.timeAgo}
+                              </span>
+                            </motion.div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
                   ) : (
                     <div className="py-12 px-4 text-center">
