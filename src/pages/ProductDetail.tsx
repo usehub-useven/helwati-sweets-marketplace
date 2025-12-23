@@ -4,12 +4,62 @@ import { ArrowRight, Heart, MapPin, MessageCircle, Share2, Star } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  const handleLike = () => {
+    setIsAnimating(true);
+    setLiked(!liked);
+    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    setTimeout(() => setIsAnimating(false), 300);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: "Helwati",
+      text: "اكتشف هذه الحلوى على حلواتي!",
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast({
+          title: "تمت المشاركة ✓",
+          description: "تم مشاركة الرابط بنجاح",
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "تم النسخ ✓",
+          description: "تم نسخ الرابط إلى الحافظة",
+        });
+      }
+    } catch (error) {
+      // User cancelled share or clipboard failed
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "تم النسخ ✓",
+          description: "تم نسخ الرابط إلى الحافظة",
+        });
+      } catch {
+        toast({
+          title: "خطأ",
+          description: "لم نتمكن من نسخ الرابط",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const product = products.find((p) => p.id === id);
 
@@ -60,15 +110,22 @@ export const ProductDetail = () => {
         {/* Actions */}
         <div className="absolute top-4 left-4 flex gap-2">
           <button
-            onClick={() => setLiked(!liked)}
+            onClick={handleLike}
             className={cn(
-              "p-3 rounded-full glass transition-colors",
-              liked && "text-destructive"
+              "p-3 rounded-full glass transition-all duration-300 flex items-center gap-1",
+              liked && "text-destructive bg-destructive/20"
             )}
           >
-            <Heart className={cn("h-5 w-5", liked && "fill-current")} />
+            <Heart 
+              className={cn(
+                "h-5 w-5 transition-transform duration-300",
+                liked && "fill-current",
+                isAnimating && "scale-125"
+              )} 
+            />
+            <span className="text-xs font-medium">{likeCount}</span>
           </button>
-          <button className="p-3 rounded-full glass">
+          <button onClick={handleShare} className="p-3 rounded-full glass">
             <Share2 className="h-5 w-5" />
           </button>
         </div>
