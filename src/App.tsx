@@ -10,6 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import SellerProfile from "./pages/SellerProfile";
 import AddProduct from "./pages/AddProduct";
 import Profile from "./pages/Profile";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/home" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/product/:id" element={<ProductDetail />} />
