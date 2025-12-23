@@ -1,6 +1,7 @@
 import { Home, Search, PlusCircle, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const navItems = [
   { icon: Home, label: "الرئيسية", path: "/" },
@@ -9,33 +10,44 @@ const navItems = [
   { icon: User, label: "حسابي", path: "/profile" },
 ];
 
+const springTransition = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 17,
+};
+
 export const BottomNav = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav pb-safe">
       <div className="flex items-center justify-around py-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link
+            <motion.div
               key={item.path}
-              to={item.path}
-              className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300",
-                isActive
-                  ? "text-accent bg-accent/10"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
+              whileTap={{ scale: 0.95 }}
+              transition={springTransition}
             >
-              <item.icon
+              <Link
+                to={item.path}
                 className={cn(
-                  "h-6 w-6 transition-transform duration-300",
-                  isActive && "scale-110"
+                  "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300",
+                  isActive
+                    ? "text-accent bg-accent/10"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
-              />
-              <span className="text-xs font-medium">{item.label}</span>
-            </Link>
+              >
+                <item.icon
+                  className={cn(
+                    "h-6 w-6 transition-transform duration-300",
+                    isActive && "scale-110"
+                  )}
+                />
+                <span className="text-xs font-medium">{item.label}</span>
+              </Link>
+            </motion.div>
           );
         })}
       </div>

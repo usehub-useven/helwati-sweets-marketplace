@@ -1,15 +1,24 @@
 import { categories } from "@/data/mockData";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface CategoryFilterProps {
   selected: string | null;
   onSelect: (category: string | null) => void;
 }
 
+const springTransition = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 17,
+};
+
 export const CategoryFilter = ({ selected, onSelect }: CategoryFilterProps) => {
   return (
     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-      <button
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        transition={springTransition}
         onClick={() => onSelect(null)}
         className={cn(
           "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300",
@@ -20,11 +29,13 @@ export const CategoryFilter = ({ selected, onSelect }: CategoryFilterProps) => {
       >
         <span>🍰</span>
         <span>الكل</span>
-      </button>
+      </motion.button>
       
       {categories.map((category) => (
-        <button
+        <motion.button
           key={category.id}
+          whileTap={{ scale: 0.95 }}
+          transition={springTransition}
           onClick={() => onSelect(category.id)}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300",
@@ -35,7 +46,7 @@ export const CategoryFilter = ({ selected, onSelect }: CategoryFilterProps) => {
         >
           <span>{category.icon}</span>
           <span>{category.name}</span>
-        </button>
+        </motion.button>
       ))}
     </div>
   );
