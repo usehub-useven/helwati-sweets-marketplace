@@ -91,7 +91,7 @@ export const Landing = () => {
 
         {/* CTA Button */}
         <Button
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/auth")}
           className="w-full h-14 rounded-2xl gradient-gold text-accent-foreground text-lg font-bold shadow-elevated hover:shadow-soft transition-all duration-300 hover:scale-[1.02]"
         >
           <Heart className="h-5 w-5 ml-2" />
