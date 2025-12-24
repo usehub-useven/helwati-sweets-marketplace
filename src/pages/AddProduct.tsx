@@ -16,6 +16,7 @@ import {
   Sparkles,
   MapPin,
   Camera,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { categories, wilayas } from "@/data/mockData";
@@ -324,6 +325,20 @@ export const AddProduct = () => {
           className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/5 blur-3xl"
         />
       </div>
+
+      {/* Close Button - Top Right Escape Hatch */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+        onClick={() => {
+          triggerHaptic(10);
+          navigate("/home");
+        }}
+        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full backdrop-blur-md bg-foreground/5 border border-border/30 flex items-center justify-center hover:bg-foreground/10 transition-colors"
+      >
+        <X className="h-5 w-5 text-foreground" />
+      </motion.button>
 
       {/* Header with Progress */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/80 border-b border-border/30">
@@ -684,20 +699,33 @@ export const AddProduct = () => {
       {/* Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/80 border-t border-border/30 p-4 safe-area-bottom">
         <div className="flex gap-3">
-          {step > 1 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+          {/* Back/Cancel Button - Always visible */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <Button
+              variant="outline"
+              onClick={() => {
+                triggerHaptic(10);
+                if (step === 1) {
+                  navigate("/home");
+                } else {
+                  prevStep();
+                }
+              }}
+              className="h-14 px-6 rounded-2xl border-border/50"
             >
-              <Button
-                variant="outline"
-                onClick={prevStep}
-                className="h-14 px-6 rounded-2xl border-border/50"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </motion.div>
-          )}
+              {step === 1 ? (
+                <span className="font-medium">إلغاء</span>
+              ) : (
+                <>
+                  <ChevronRight className="h-5 w-5 ml-1" />
+                  <span className="font-medium">سابق</span>
+                </>
+              )}
+            </Button>
+          </motion.div>
 
           {step < 4 ? (
             <Button
