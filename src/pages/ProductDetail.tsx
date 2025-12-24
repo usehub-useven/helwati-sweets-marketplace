@@ -1,12 +1,51 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { products, categories } from "@/data/mockData";
-import { ArrowRight, Heart, MapPin, MessageCircle, Share2, Star } from "lucide-react";
+import { ArrowRight, ChevronLeft, Heart, MapPin, MessageCircle, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { triggerHaptic } from "@/lib/haptics";
+
+// Animation variants for staggered children
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      damping: 25,
+      stiffness: 120,
+    },
+  },
+};
+
+const sellerVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      damping: 20,
+      stiffness: 100,
+    },
+  },
+};
 
 export const ProductDetail = () => {
   const { id } = useParams();
@@ -65,7 +104,7 @@ export const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4 bg-background">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -96,12 +135,12 @@ export const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Immersive Hero Image */}
+      {/* Layer 1: Immersive Hero Image */}
       <div className="relative">
         <motion.div
           layoutId={`product-image-${id}`}
           className={cn(
-            "w-full aspect-[4/3] bg-muted relative overflow-hidden",
+            "w-full h-[50vh] bg-muted relative overflow-hidden",
             !imageLoaded && "animate-pulse"
           )}
         >
@@ -109,145 +148,158 @@ export const ProductDetail = () => {
             src={product.image}
             alt={product.title}
             className={cn(
-              "w-full h-full object-cover transition-opacity duration-500",
+              "w-full h-full object-cover transition-opacity duration-700",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}
           />
           
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          {/* Cinematic Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent" />
         </motion.div>
 
-        {/* Floating Glass Back Button */}
+        {/* Floating Glass Back Button - Top Right */}
         <motion.button
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
-          className="absolute top-4 right-4 p-3 rounded-full glass-nav shadow-lg"
+          className="absolute top-4 right-4 p-3 rounded-full backdrop-blur-md bg-white/30 border border-white/40 shadow-xl"
         >
-          <ArrowRight className="h-5 w-5 text-foreground" />
+          <ChevronLeft className="h-6 w-6 text-white rotate-180" />
         </motion.button>
 
-        {/* Floating Action Buttons */}
+        {/* Floating Action Buttons - Top Left */}
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="absolute top-4 left-4 flex gap-2"
+          transition={{ delay: 0.3, type: "spring" }}
+          className="absolute top-4 left-4 flex gap-3"
         >
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleLike}
             className={cn(
-              "p-3 rounded-full glass-nav shadow-lg transition-all duration-300 flex items-center gap-1.5",
-              liked && "bg-destructive/20"
+              "p-3 rounded-full backdrop-blur-md border border-white/40 shadow-xl transition-all duration-300 flex items-center gap-1.5",
+              liked ? "bg-destructive/30" : "bg-white/30"
             )}
           >
             <Heart 
               className={cn(
                 "h-5 w-5 transition-all duration-300",
-                liked ? "fill-destructive text-destructive scale-110" : "text-foreground"
+                liked ? "fill-white text-white scale-110" : "text-white"
               )} 
             />
-            <span className={cn(
-              "text-xs font-bold",
-              liked ? "text-destructive" : "text-foreground"
-            )}>{likeCount}</span>
+            <span className="text-xs font-bold text-white">{likeCount}</span>
           </motion.button>
           
           <motion.button 
             whileTap={{ scale: 0.9 }}
             onClick={handleShare} 
-            className="p-3 rounded-full glass-nav shadow-lg"
+            className="p-3 rounded-full backdrop-blur-md bg-white/30 border border-white/40 shadow-xl"
           >
-            <Share2 className="h-5 w-5 text-foreground" />
+            <Share2 className="h-5 w-5 text-white" />
           </motion.button>
         </motion.div>
 
-        {/* Category Badge */}
+        {/* Category Badge - Bottom */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="absolute bottom-6 right-4 px-4 py-2 rounded-full glass-nav text-sm font-bold shadow-lg"
+          transition={{ delay: 0.4, type: "spring" }}
+          className="absolute bottom-16 right-6 px-4 py-2 rounded-full backdrop-blur-md bg-white/25 border border-white/40 text-sm font-bold text-white shadow-xl"
         >
           {category?.icon} {category?.name}
         </motion.div>
       </div>
 
-      {/* Glassmorphic Content Sheet */}
+      {/* Layer 2: Glass Sheet Content Container */}
       <motion.div
-        initial={{ y: 50, opacity: 0 }}
+        initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ 
           type: "spring", 
-          stiffness: 300, 
-          damping: 30,
-          delay: 0.1
+          damping: 25, 
+          stiffness: 120,
+          delay: 0.15
         }}
-        className="relative -mt-6 rounded-t-3xl glass-card border-t border-white/30 pb-32"
+        className="relative -mt-12 rounded-t-[32px] backdrop-blur-xl bg-background/80 border-t border-white/40 shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.2)] pb-32 min-h-[60vh]"
       >
-        <div className="px-5 py-6 space-y-6">
-          {/* Drag Handle */}
-          <div className="flex justify-center">
-            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-          </div>
+        {/* Drag Handle */}
+        <div className="flex justify-center pt-4 pb-2">
+          <div className="w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
+        </div>
 
-          {/* Title & Price */}
-          <div className="flex items-start justify-between gap-4">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <h1 className="text-2xl font-bold text-foreground mb-2">
+        {/* Staggered Content */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="px-6 py-4 space-y-6"
+        >
+          {/* Title & Price Row */}
+          <motion.div variants={itemVariants} className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-3xl font-black text-foreground leading-tight">
                 {product.title}
               </h1>
-              <p className="text-muted-foreground leading-relaxed">
-                {product.description}
-              </p>
-            </motion.div>
+            </div>
             
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring" }}
-              className="gradient-gold text-accent-foreground px-4 py-2.5 rounded-2xl text-lg font-bold whitespace-nowrap shadow-lg"
-            >
-              {product.price.toLocaleString()} د.ج
-            </motion.div>
-          </div>
+            <div className="relative">
+              {/* Glass Price Pill */}
+              <div className="px-5 py-3 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 shadow-lg shadow-amber-500/30">
+                <span className="text-xl font-black text-white whitespace-nowrap">
+                  {product.price.toLocaleString()} د.ج
+                </span>
+              </div>
+              {/* Subtle glow */}
+              <div className="absolute inset-0 rounded-2xl bg-amber-400/30 blur-xl -z-10" />
+            </div>
+          </motion.div>
 
-          {/* Seller Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
+          {/* Description */}
+          <motion.div variants={itemVariants}>
+            <p className="text-muted-foreground leading-relaxed text-lg">
+              {product.description}
+            </p>
+          </motion.div>
+
+          {/* Premium Seller Capsule */}
+          <motion.div variants={sellerVariants}>
             <Link to={`/seller/${product.seller.id}`}>
               <motion.div 
                 whileTap={{ scale: 0.98 }}
-                className="glass-card rounded-2xl p-4 border border-border/50 shadow-sm active:shadow-inner transition-all"
+                className="relative rounded-2xl p-4 backdrop-blur-lg bg-card/60 border border-border/60 shadow-lg overflow-hidden group"
               >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={product.seller.avatar}
-                    alt={product.seller.name}
-                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-primary/20"
-                  />
+                {/* Inner glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                
+                <div className="relative flex items-center gap-4">
+                  {/* Avatar with ring */}
+                  <div className="relative">
+                    <img
+                      src={product.seller.avatar}
+                      alt={product.seller.name}
+                      className="w-16 h-16 rounded-2xl object-cover ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                    />
+                    {/* Online indicator */}
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+                  </div>
+                  
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground text-lg truncate">
                       {product.seller.name}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <MapPin className="h-4 w-4 flex-shrink-0 text-primary/70" />
                       <span className="truncate">{product.seller.wilaya}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-1.5">
-                      <Star className="h-4 w-4 text-accent fill-accent" />
+                      <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
                       <span className="text-sm font-bold text-foreground">
                         {product.seller.rating}
                       </span>
@@ -256,57 +308,62 @@ export const ProductDetail = () => {
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground rotate-180 flex-shrink-0" />
+                  
+                  {/* Chevron */}
+                  <div className="p-2 rounded-full bg-muted/50 group-hover:bg-primary/10 transition-colors">
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
                 </div>
               </motion.div>
             </Link>
           </motion.div>
 
           {/* Additional Info Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="space-y-3"
-          >
+          <motion.div variants={itemVariants} className="space-y-3">
             <h4 className="font-bold text-foreground">معلومات إضافية</h4>
             <div className="grid grid-cols-2 gap-3">
-              <div className="glass-card rounded-xl p-3 text-center">
-                <p className="text-2xl mb-1">🍰</p>
-                <p className="text-xs text-muted-foreground">صنع يدوي</p>
+              <div className="rounded-xl p-4 backdrop-blur-sm bg-card/50 border border-border/40 text-center">
+                <p className="text-3xl mb-2">🍰</p>
+                <p className="text-sm text-muted-foreground font-medium">صنع يدوي</p>
               </div>
-              <div className="glass-card rounded-xl p-3 text-center">
-                <p className="text-2xl mb-1">🚚</p>
-                <p className="text-xs text-muted-foreground">توصيل متاح</p>
+              <div className="rounded-xl p-4 backdrop-blur-sm bg-card/50 border border-border/40 text-center">
+                <p className="text-3xl mb-2">🚚</p>
+                <p className="text-sm text-muted-foreground font-medium">توصيل متاح</p>
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
 
-      {/* Sticky WhatsApp CTA */}
+      {/* Layer 3: Sticky Glass CTA Bar */}
       <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ delay: 0.7, type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 p-4 glass-nav border-t border-white/20 z-50"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.8, type: "spring", stiffness: 200, damping: 25 }}
+        className="fixed bottom-0 left-0 right-0 p-4 backdrop-blur-lg bg-background/60 border-t border-white/20 z-50"
       >
         <motion.div
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          className="relative"
         >
           <Button
             asChild
-            className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20BD5A] hover:to-[#0F7A6D] text-white text-lg font-bold shadow-xl relative overflow-hidden group"
+            className="w-full h-14 rounded-full bg-gradient-to-r from-[#25D366] via-[#20BD5A] to-[#128C7E] hover:from-[#20BD5A] hover:to-[#0F7A6D] text-white text-lg font-bold shadow-xl shadow-[#25D366]/30 relative overflow-hidden"
             onClick={() => triggerHaptic(15)}
           >
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-              {/* Pulse Animation */}
-              <span className="absolute inset-0 bg-white/20 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
-              <MessageCircle className="h-6 w-6 ml-3" />
-              اطلب عبر واتساب
+              {/* Animated pulse ring */}
+              <span className="absolute inset-0 rounded-full animate-[pulse_2s_ease-in-out_infinite] bg-white/10" />
+              {/* Shine effect */}
+              <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+              <MessageCircle className="h-6 w-6 ml-3 relative z-10" />
+              <span className="relative z-10">اطلب عبر واتساب</span>
             </a>
           </Button>
+          
+          {/* Glow effect under button */}
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-4 bg-[#25D366]/40 blur-xl rounded-full" />
         </motion.div>
       </motion.div>
     </div>
