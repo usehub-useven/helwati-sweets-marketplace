@@ -1,12 +1,13 @@
-import { Home, Search, PlusCircle, User } from "lucide-react";
+import { Home, Search, PlusCircle, Heart, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 const navItems = [
-  { icon: Home, label: "الرئيسية", path: "/" },
+  { icon: Home, label: "الرئيسية", path: "/home" },
   { icon: Search, label: "بحث", path: "/search" },
   { icon: PlusCircle, label: "إضافة", path: "/add" },
+  { icon: Heart, label: "المفضلة", path: "/favorites" },
   { icon: User, label: "حسابي", path: "/profile" },
 ];
 
