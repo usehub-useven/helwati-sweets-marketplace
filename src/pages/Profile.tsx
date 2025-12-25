@@ -1,257 +1,133 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { BottomNav } from "@/components/BottomNav";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client"; // ✅ مسار Lovable الصحيح
 import { toast } from "sonner";
-import { LogOut, User, Loader2, Edit2, MapPin, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
-import { EditProfileDialog } from "@/components/EditProfileDialog";
-import { MyProductsSection } from "@/components/MyProductsSection";
+import { User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
+import { Loader2, User as UserIcon, ChefHat, ShoppingBag } from "lucide-react"; // أيقونات جميلة
 
-// Separate component to avoid re-renders
-const RoleToggleButton = ({ profile, onRoleChanged }: { profile: Profile; onRoleChanged: () => void }) => {
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleToggle = async () => {
-    if (isUpdating) return;
-    setIsUpdating(true);
-    
-    const newRole = profile.role === "seller" ? "buyer" : "seller";
-    const { error } = await supabase
-      .from("profiles")
-      .update({ role: newRole })
-      .eq("id", profile.id);
-    
-    if (error) {
-      toast.error("حدث خطأ في تغيير الحساب");
-      setIsUpdating(false);
-    } else {
-      toast.success(newRole === "seller" ? "تم التبديل إلى حساب بائع" : "تم التبديل إلى حساب مشتري");
-      onRoleChanged();
-      // Small delay then reload to update nav
-      setTimeout(() => window.location.reload(), 500);
-    }
-  };
-
-  return (
-    <Button
-      onClick={handleToggle}
-      disabled={isUpdating}
-      variant="outline"
-      className="w-full h-12 rounded-xl border-primary/50 text-primary hover:bg-primary/10"
-    >
-      {isUpdating ? (
-        <Loader2 className="h-5 w-5 ml-2 animate-spin" />
-      ) : (
-        <RefreshCw className="h-5 w-5 ml-2" />
-      )}
-      {profile.role === "seller" ? "التبديل إلى حساب مشتري" : "التبديل إلى حساب بائع"}
-    </Button>
-  );
-};
-
-interface Profile {
-  id: string;
-  full_name: string | null;
-  bio: string | null;
-  phone_number: string | null;
-  avatar_url: string | null;
-  wilaya: string | null;
-  role: string | null;
-}
-
-export const Profile = () => {
+export default function Profile() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [role, setRole] = useState<string>("buyer"); // الحالة المحلية للدور
+  const [isSwitching, setIsSwitching] = useState(false); // حالة تحميل الزر
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-    if (data) {
-      setProfile(data as Profile);
-    }
-  }, []);
-
+  // 1. جلب المستخدم الحالي عند فتح الصفحة
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
+    const getUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth"); // توجيه لصفحة الدخول إذا لم يكن مسجلاً
+        return;
       }
-      setLoading(false);
+      setUser(session.user);
+
+      // جلب الدور الحالي
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
+
+      if (profile) {
+        setRole(profile.role || "buyer");
+      }
+      setLoadingUser(false);
     };
-    checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user || null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
+    getUser();
+  }, [navigate]);
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  // 2. دالة التبديل الذكية (المصححة)
+  const handleToggleRole = async () => {
+    if (!user) return;
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("تم تسجيل الخروج");
-    navigate("/");
-  };
+    setIsSwitching(true); // تشغيل السبينر
+    const newRole = role === "seller" ? "buyer" : "seller";
 
-  const handleProfileUpdated = () => {
-    if (user) {
-      fetchProfile(user.id);
+    try {
+      // إرسال التحديث لـ Supabase
+      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", user.id);
+
+      if (error) throw error;
+
+      // ✅ نجاح! نحدث الحالة المحلية فوراً
+      setRole(newRole);
+
+      // ✅ إجبار التطبيق على تحديث المعلومات في الخلفية (لإظهار/إخفاء الأزرار)
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+
+      toast.success(newRole === "seller" ? "أهلاً بك في لوحة البائع! 👨‍🍳" : "تم التحويل لحساب مشتري 🛍️");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("حدث خطأ أثناء التبديل، حاول مرة أخرى");
+    } finally {
+      // ✅ الأهم: إيقاف السبينر مهما حدث
+      setIsSwitching(false);
     }
   };
 
-  if (loading) {
+  if (loadingUser) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-[#FDF6F6]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background pb-24">
-        <header className="sticky top-0 z-40 glass border-b border-border/50">
-          <div className="px-4 py-4">
-            <h1 className="text-2xl font-bold text-foreground">حسابي 👤</h1>
-          </div>
-        </header>
-
-        <main className="px-4 py-12">
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-6">
-              <User className="h-10 w-10 text-foreground" />
-            </div>
-            <h2 className="text-xl font-bold text-foreground mb-3">
-              مرحباً بك
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              سجّل دخولك للوصول إلى حسابك وإدارة منتجاتك
-            </p>
-            <Button
-              asChild
-              className="gradient-gold text-accent-foreground font-bold px-8 h-12 rounded-xl"
-            >
-              <Link to="/auth">تسجيل الدخول</Link>
-            </Button>
-          </div>
-        </main>
-
-        <BottomNav />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <header className="sticky top-0 z-40 glass border-b border-border/50">
-        <div className="px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">حسابي 👤</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setEditDialogOpen(true)}
-            className="rounded-xl"
-          >
-            <Edit2 className="h-5 w-5 text-foreground" />
-          </Button>
-        </div>
-      </header>
-
-      <main className="px-4 py-6 space-y-6">
-        {/* Profile Card */}
-        <div className="glass-card rounded-2xl p-6 text-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 border-2 border-primary">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full gradient-gold flex items-center justify-center">
-                <User className="h-12 w-12 text-accent-foreground" />
-              </div>
-            )}
-          </div>
-          <h2 className="text-xl font-bold text-foreground">
-            {profile?.full_name || "مستخدم جديد"}
-          </h2>
-          <p className="text-muted-foreground text-sm">{user.email}</p>
-          
-          {profile?.bio && (
-            <p className="text-foreground/80 text-sm mt-3 max-w-xs mx-auto">
-              {profile.bio}
-            </p>
-          )}
-          
-          {profile?.wilaya && (
-            <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm mt-2">
-              <MapPin className="h-4 w-4" />
-              <span>{profile.wilaya}</span>
+    <div className="min-h-screen bg-[#FDF6F6] pb-24 pt-8 px-4">
+      <div className="max-w-md mx-auto space-y-8">
+        {/* رأس الصفحة */}
+        <div className="text-center space-y-2">
+          <div className="relative inline-block">
+            <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto border-4 border-white">
+              {role === "seller" ? (
+                <ChefHat className="w-10 h-10 text-primary" />
+              ) : (
+                <UserIcon className="w-10 h-10 text-gray-400" />
+              )}
             </div>
-          )}
-          
-          {profile?.phone_number && (
-            <p className="text-primary text-sm mt-2 font-medium" dir="ltr">
-              📱 {profile.phone_number}
-            </p>
-          )}
-        </div>
-
-        {/* My Products Section */}
-        <MyProductsSection userId={user.id} />
-
-        {/* Developer Role Toggle */}
-        {profile && (
-          <div className="glass-card rounded-2xl p-4">
-            <p className="text-xs text-muted-foreground mb-3 text-center">🛠️ وضع المطور</p>
-            <RoleToggleButton profile={profile} onRoleChanged={() => fetchProfile(profile.id)} />
+            <span className="absolute bottom-0 right-0 bg-primary text-white text-xs px-2 py-1 rounded-full border-2 border-white">
+              {role === "seller" ? "بائع" : "مشتري"}
+            </span>
           </div>
-        )}
-
-        {/* Actions */}
-        <div className="space-y-3 pt-4">
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full h-12 rounded-xl border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-          >
-            <LogOut className="h-5 w-5 ml-2" />
-            تسجيل الخروج
-          </Button>
+          <h2 className="text-2xl font-bold font-tajawal text-gray-800">حسابي</h2>
+          <p className="text-gray-500 text-sm">{user?.email}</p>
         </div>
-      </main>
 
-      {/* Edit Profile Dialog */}
-      {profile && (
-        <EditProfileDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          profile={profile}
-          onProfileUpdated={handleProfileUpdated}
-        />
-      )}
+        {/* بطاقة التحكم */}
+        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 shadow-sm border border-white/50 space-y-6">
+          <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm">
+            <span className="text-gray-600 font-medium">نوع الحساب الحالي:</span>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-bold ${role === "seller" ? "bg-orange-100 text-orange-600" : "bg-blue-100 text-blue-600"}`}
+            >
+              {role === "seller" ? "تاجر حلويات 🧁" : "زبون 👤"}
+            </span>
+          </div>
 
-      <BottomNav />
+          <button
+            onClick={handleToggleRole}
+            disabled={isSwitching}
+            className="w-full relative overflow-hidden bg-black text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            {isSwitching ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                جارٍ التبديل...
+              </>
+            ) : (
+              <>
+                {role === "seller" ? <ShoppingBag className="w-5 h-5" /> : <ChefHat className="w-5 h-5" />}
+                {role === "seller" ? "التبديل إلى حساب مشتري" : "التبديل إلى حساب بائع"}
+              </>
+            )}
+          </button>
+
+          <p className="text-xs text-center text-gray-400">يمكنك التبديل بين الحسابين في أي وقت لتجربة التطبيق.</p>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default Profile;
+}
