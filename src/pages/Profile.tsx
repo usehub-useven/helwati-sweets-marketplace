@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type Role = "buyer" | "seller";
@@ -19,8 +19,8 @@ export default function Profile() {
 
       const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
 
-      if (data?.role) {
-        setRole(data.role);
+      if (data?.role && (data.role === "buyer" || data.role === "seller")) {
+        setRole(data.role as Role);
         localStorage.setItem("role", data.role);
       }
     };
