@@ -9,6 +9,48 @@ import { Link } from "react-router-dom";
 import { EditProfileDialog } from "@/components/EditProfileDialog";
 import { MyProductsSection } from "@/components/MyProductsSection";
 
+// Separate component to avoid re-renders
+const RoleToggleButton = ({ profile, onRoleChanged }: { profile: Profile; onRoleChanged: () => void }) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleToggle = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    
+    const newRole = profile.role === "seller" ? "buyer" : "seller";
+    const { error } = await supabase
+      .from("profiles")
+      .update({ role: newRole })
+      .eq("id", profile.id);
+    
+    if (error) {
+      toast.error("حدث خطأ في تغيير الحساب");
+      setIsUpdating(false);
+    } else {
+      toast.success(newRole === "seller" ? "تم التبديل إلى حساب بائع" : "تم التبديل إلى حساب مشتري");
+      onRoleChanged();
+      // Small delay then reload to update nav
+      setTimeout(() => window.location.reload(), 500);
+    }
+  };
+
+  return (
+    <Button
+      onClick={handleToggle}
+      disabled={isUpdating}
+      variant="outline"
+      className="w-full h-12 rounded-xl border-primary/50 text-primary hover:bg-primary/10"
+    >
+      {isUpdating ? (
+        <Loader2 className="h-5 w-5 ml-2 animate-spin" />
+      ) : (
+        <RefreshCw className="h-5 w-5 ml-2" />
+      )}
+      {profile.role === "seller" ? "التبديل إلى حساب مشتري" : "التبديل إلى حساب بائع"}
+    </Button>
+  );
+};
+
 interface Profile {
   id: string;
   full_name: string | null;
@@ -180,28 +222,7 @@ export const Profile = () => {
         {profile && (
           <div className="glass-card rounded-2xl p-4">
             <p className="text-xs text-muted-foreground mb-3 text-center">🛠️ وضع المطور</p>
-            <Button
-              onClick={async () => {
-                const newRole = profile.role === "seller" ? "buyer" : "seller";
-                const { error } = await supabase
-                  .from("profiles")
-                  .update({ role: newRole })
-                  .eq("id", profile.id);
-                
-                if (error) {
-                  toast.error("حدث خطأ في تغيير الحساب");
-                } else {
-                  toast.success(newRole === "seller" ? "تم التبديل إلى حساب بائع" : "تم التبديل إلى حساب مشتري");
-                  fetchProfile(profile.id);
-                  window.location.reload();
-                }
-              }}
-              variant="outline"
-              className="w-full h-12 rounded-xl border-primary/50 text-primary hover:bg-primary/10"
-            >
-              <RefreshCw className="h-5 w-5 ml-2" />
-              {profile.role === "seller" ? "التبديل إلى حساب مشتري" : "التبديل إلى حساب بائع"}
-            </Button>
+            <RoleToggleButton profile={profile} onRoleChanged={() => fetchProfile(profile.id)} />
           </div>
         )}
 
