@@ -25,7 +25,8 @@ export const BottomNav = () => {
   return (
     // استخدام glass-nav التي قمنا بتحسينها في CSS
     // إضافة pb-6 لضمان مسافة أمان في هواتف الأيفون الحديثة
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav pb-6 pt-2 border-t border-white/20">
+    // Hidden on desktop (md and up)
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav pb-6 pt-2 border-t border-white/20 md:hidden">
       <div className="flex items-center justify-around px-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

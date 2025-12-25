@@ -27,8 +27,18 @@ export const HeroCarousel = () => {
     }
   };
 
+  // Responsive offset based on screen size
+  const getOffset = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) return 180; // lg
+      if (window.innerWidth >= 768) return 150; // md
+    }
+    return 120; // mobile
+  };
+
   const getItemStyles = (index: number) => {
     const diff = index - activeIndex;
+    const offset = getOffset();
     
     if (diff === 0) {
       // Active (center)
@@ -42,7 +52,7 @@ export const HeroCarousel = () => {
     } else if (diff === -1 || (activeIndex === 0 && index === 2)) {
       // Left side
       return {
-        x: -120,
+        x: -offset,
         scale: 0.8,
         rotateY: 25,
         zIndex: 5,
@@ -51,7 +61,7 @@ export const HeroCarousel = () => {
     } else {
       // Right side
       return {
-        x: 120,
+        x: offset,
         scale: 0.8,
         rotateY: -25,
         zIndex: 5,
@@ -62,7 +72,7 @@ export const HeroCarousel = () => {
 
   return (
     <div 
-      className="relative h-52 w-full overflow-hidden"
+      className="relative h-52 md:h-72 lg:h-80 w-full overflow-hidden"
       style={{ perspective: "1000px" }}
     >
       <div className="absolute inset-0 flex items-center justify-center">
@@ -85,7 +95,7 @@ export const HeroCarousel = () => {
             >
               <div className="relative">
                 {/* Image Card */}
-                <div className="w-44 h-44 rounded-2xl overflow-hidden shadow-elevated ring-1 ring-white/20">
+                <div className="w-44 h-44 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-2xl overflow-hidden shadow-elevated ring-1 ring-white/20">
                   <img
                     src={product.image}
                     alt={product.title}

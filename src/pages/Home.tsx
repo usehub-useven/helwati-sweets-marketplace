@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { BottomNav } from "@/components/BottomNav";
+import { AppLayout } from "@/components/AppLayout";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductCardSkeleton } from "@/components/ProductCardSkeleton";
 import { CategoryFilter } from "@/components/CategoryFilter";
@@ -138,10 +138,11 @@ export const Home = () => {
   const isSearchActive = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-background pb-28">
-      {/* Header - Apple-style Glassmorphism */}
-      <header className="sticky top-0 z-40 glass-nav pt-safe">
-        <div className="px-4 py-3 space-y-4">
+    <AppLayout>
+      <div className="min-h-screen bg-background pb-28 md:pb-8">
+        {/* Header - Apple-style Glassmorphism */}
+        <header className="sticky top-0 md:top-16 z-40 glass-nav pt-safe">
+          <div className="px-4 md:px-6 lg:px-8 py-3 space-y-4 max-w-7xl mx-auto">
           {/* Top Row: Welcome & Actions */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
@@ -281,22 +282,22 @@ export const Home = () => {
       </header>
 
       {/* Hero Carousel */}
-      <section className="py-6">
+      <section className="py-6 md:py-10 lg:py-12">
         <HeroCarousel />
       </section>
 
       {/* Products Grid */}
-      <main className="px-4">
+      <main className="px-4 md:px-6 lg:px-8">
         {isRefreshing ? (
           // Skeleton Loading Grid
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
           // Real Products Grid with Staggered Animation
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 gap-4">
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             <AnimatePresence>
               {filteredProducts.map((product, index) => (
                 <motion.div key={product.id} variants={itemVariants}>
@@ -334,9 +335,8 @@ export const Home = () => {
           </motion.div>
         )}
       </main>
-
-      <BottomNav />
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
