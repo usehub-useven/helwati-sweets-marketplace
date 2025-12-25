@@ -7,6 +7,7 @@ type Role = "buyer" | "seller";
 export default function Profile() {
   const [role, setRole] = useState<Role>("buyer");
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // جلب الدور عند فتح الصفحة
   useEffect(() => {
@@ -16,11 +17,17 @@ export default function Profile() {
       } = await supabase.auth.getUser();
 
       if (!user) return;
+      setUserId(user.id);
 
-      const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      // Fetch from user_roles table
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       if (data?.role && (data.role === "buyer" || data.role === "seller")) {
-        setRole(data.role as Role);
+        setRole(data.role);
         localStorage.setItem("role", data.role);
       }
     };
@@ -29,18 +36,18 @@ export default function Profile() {
   }, []);
 
   const toggleRole = async () => {
+    if (!userId) return;
+    
     setLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
       const newRole: Role = role === "buyer" ? "seller" : "buyer";
 
-      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", user.id);
+      // Update in user_roles table
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ role: newRole })
+        .eq("user_id", userId);
 
       if (error) throw error;
 
@@ -49,6 +56,7 @@ export default function Profile() {
 
       toast.success(`تم التحويل إلى ${newRole === "seller" ? "بائع" : "زبون"}`);
     } catch (e) {
+      console.error("Error switching role:", e);
       toast.error("حدث خطأ أثناء تغيير الدور");
     } finally {
       setLoading(false);
