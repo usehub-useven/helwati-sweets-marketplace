@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, Heart, Search, User, LayoutDashboard } from "lucide-react";
 
-export default function BottomNav() {
+export function BottomNav() {
   const navigate = useNavigate();
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
 
@@ -12,7 +12,7 @@ export default function BottomNav() {
   }, []);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/70 backdrop-blur-xl border-t flex justify-around py-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/70 backdrop-blur-xl border-t flex justify-around py-2 z-50">
       <button onClick={() => navigate("/")}>
         <Home />
       </button>
