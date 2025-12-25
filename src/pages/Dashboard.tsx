@@ -3,8 +3,8 @@ import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { AppLayout } from "@/components/AppLayout";
 import { products as mockProducts, sellers, categories } from "@/data/mockData";
 import { 
-  Coins, Eye, Heart, Pencil, Trash2, Plus, Share2, 
-  Package, TrendingUp, Sparkles 
+  Eye, Heart, Pencil, Trash2, Plus, Share2, 
+  Package, TrendingUp, Sparkles, ShoppingBag 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -207,10 +207,8 @@ export const Dashboard = () => {
 
   // Mock stats
   const stats = {
-    earnings: 25000,
     views: 1284,
     likes: 342,
-    orders: 18,
   };
 
   const handleEdit = (productId: string) => {
@@ -293,13 +291,13 @@ export const Dashboard = () => {
               <TrendingUp className="h-4 w-4" />
               إحصائياتي
             </motion.h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               <StatCard
-                title="أرباحي"
-                value={`${stats.earnings.toLocaleString()} د.ج`}
-                icon={<Coins className="h-5 w-5 text-white" />}
-                gradient="bg-gradient-to-br from-amber-400 to-orange-500"
-                glowColor="bg-amber-400/30"
+                title="منتجاتي النشطة"
+                value={myProducts.length}
+                icon={<ShoppingBag className="h-5 w-5 text-white" />}
+                gradient="bg-gradient-to-br from-accent to-gold"
+                glowColor="bg-accent/30"
               />
               <StatCard
                 title="المشاهدات"
@@ -315,13 +313,6 @@ export const Dashboard = () => {
                 gradient="bg-gradient-to-br from-rose-400 to-pink-500"
                 glowColor="bg-rose-400/30"
               />
-              <StatCard
-                title="الطلبات"
-                value={stats.orders}
-                icon={<Package className="h-5 w-5 text-white" />}
-                gradient="bg-gradient-to-br from-emerald-400 to-teal-500"
-                glowColor="bg-emerald-400/30"
-              />
             </div>
           </section>
 
@@ -334,18 +325,14 @@ export const Dashboard = () => {
               <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                 <Package className="h-4 w-4" />
                 منتجاتي
-                <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
-                  {myProducts.length}
-                </span>
               </h2>
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={handleAddProduct}
-                className="text-accent hover:text-accent hover:bg-accent/10 rounded-xl text-xs"
+                size="sm"
+                className="rounded-full bg-gradient-to-r from-accent to-gold text-white font-medium shadow-lg shadow-accent/30 px-4"
               >
-                <Plus className="h-3.5 w-3.5 ml-1" />
-                إضافة
+                <Plus className="h-4 w-4 ml-1.5" />
+                إضافة حلوى جديدة
               </Button>
             </motion.div>
 
@@ -366,34 +353,6 @@ export const Dashboard = () => {
           </section>
         </motion.main>
 
-        {/* Floating Quick Actions Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50"
-        >
-          <div className="glass-card px-2 py-2 rounded-full border border-white/30 shadow-elevated flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleAddProduct}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent to-gold text-white font-medium text-sm shadow-lg shadow-accent/30"
-            >
-              <Plus className="h-4 w-4" />
-              إضافة منتج
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleShareShop}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-secondary/80 text-foreground font-medium text-sm hover:bg-secondary transition-colors"
-            >
-              <Share2 className="h-4 w-4" />
-              شارك متجرك
-            </motion.button>
-          </div>
-        </motion.div>
       </div>
     </AppLayout>
   );
