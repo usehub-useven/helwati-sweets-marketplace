@@ -79,11 +79,16 @@ const Auth = () => {
           return;
         }
 
-        // Create profile for new user
+        // Create profile and role for new user
         if (data.user) {
           await supabase.from("profiles").insert({
             id: data.user.id,
             full_name: formData.fullName,
+          });
+          
+          // Insert role into separate user_roles table
+          await supabase.from("user_roles").insert({
+            user_id: data.user.id,
             role: "buyer",
           });
         }
