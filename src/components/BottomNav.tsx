@@ -1,30 +1,71 @@
-import { Home, Search, Heart, User } from "lucide-react";
+import { Home, Search, Heart, User, LayoutDashboard } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const navItems = [
+const baseNavItems = [
   { icon: Home, label: "الرئيسية", path: "/home" },
   { icon: Search, label: "بحث", path: "/search" },
   { icon: Heart, label: "المفضلة", path: "/favorites" },
   { icon: User, label: "حسابي", path: "/profile" },
 ];
 
+const sellerNavItem = { icon: LayoutDashboard, label: "لوحتي", path: "/dashboard" };
+
 export const BottomNav = () => {
   const location = useLocation();
+  const [isSeller, setIsSeller] = useState(false);
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        
+        setIsSeller(profile?.role === "seller");
+      }
+    };
+
+    checkUserRole();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          
+          setIsSeller(profile?.role === "seller");
+        } else {
+          setIsSeller(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Build nav items based on role
+  const navItems = isSeller 
+    ? [...baseNavItems.slice(0, 3), sellerNavItem, baseNavItems[3]]
+    : baseNavItems;
 
   // دالة الاهتزاز (Haptic Feedback)
   const handleNavClick = () => {
-    // التحقق مما إذا كان المتصفح يدعم الاهتزاز
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(15); // اهتزاز خفيف جداً لمدة 15ms
+      navigator.vibrate(15);
     }
   };
 
   return (
-    // استخدام glass-nav التي قمنا بتحسينها في CSS
-    // إضافة pb-6 لضمان مسافة أمان في هواتف الأيفون الحديثة
-    // Hidden on desktop (md and up)
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav pb-6 pt-2 border-t border-white/20 md:hidden">
       <div className="flex items-center justify-around px-2">
         {navItems.map((item) => {
@@ -37,7 +78,6 @@ export const BottomNav = () => {
               onClick={handleNavClick}
               className="relative flex flex-col items-center justify-center w-16 h-14"
             >
-              {/* الخلفية المضيئة المتحركة (Active Glow) - تظهر فقط عند التفعيل */}
               {isActive && (
                 <motion.div
                   layoutId="nav-active-glow"
@@ -48,26 +88,24 @@ export const BottomNav = () => {
                 />
               )}
 
-              {/* الأيقونة مع حركة القفز */}
               <motion.div
                 animate={{
                   scale: isActive ? 1.1 : 1,
-                  y: isActive ? -2 : 0, // ترتفع قليلاً عند التفعيل
+                  y: isActive ? -2 : 0,
                 }}
-                whileTap={{ scale: 0.9 }} // تنكمش عند الضغط
+                whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <item.icon
                   className={cn(
                     "h-6 w-6 transition-colors duration-300",
                     isActive
-                      ? "text-accent stroke-[2.5px]" // سميكة وملونة عند التفعيل
-                      : "text-muted-foreground/80 stroke-2", // رمادية ونحيفة عند الخمول
+                      ? "text-accent stroke-[2.5px]"
+                      : "text-muted-foreground/80 stroke-2",
                   )}
                 />
               </motion.div>
 
-              {/* النص أسفل الأيقونة */}
               <motion.span
                 animate={{
                   opacity: isActive ? 1 : 0.7,

@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User, Loader2, Edit2, MapPin } from "lucide-react";
+import { LogOut, User, Loader2, Edit2, MapPin, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EditProfileDialog } from "@/components/EditProfileDialog";
 import { MyProductsSection } from "@/components/MyProductsSection";
@@ -175,6 +175,35 @@ export const Profile = () => {
 
         {/* My Products Section */}
         <MyProductsSection userId={user.id} />
+
+        {/* Developer Role Toggle */}
+        {profile && (
+          <div className="glass-card rounded-2xl p-4">
+            <p className="text-xs text-muted-foreground mb-3 text-center">🛠️ وضع المطور</p>
+            <Button
+              onClick={async () => {
+                const newRole = profile.role === "seller" ? "buyer" : "seller";
+                const { error } = await supabase
+                  .from("profiles")
+                  .update({ role: newRole })
+                  .eq("id", profile.id);
+                
+                if (error) {
+                  toast.error("حدث خطأ في تغيير الحساب");
+                } else {
+                  toast.success(newRole === "seller" ? "تم التبديل إلى حساب بائع" : "تم التبديل إلى حساب مشتري");
+                  fetchProfile(profile.id);
+                  window.location.reload();
+                }
+              }}
+              variant="outline"
+              className="w-full h-12 rounded-xl border-primary/50 text-primary hover:bg-primary/10"
+            >
+              <RefreshCw className="h-5 w-5 ml-2" />
+              {profile.role === "seller" ? "التبديل إلى حساب مشتري" : "التبديل إلى حساب بائع"}
+            </Button>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-3 pt-4">
