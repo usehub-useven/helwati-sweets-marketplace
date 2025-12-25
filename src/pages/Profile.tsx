@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client"; // ✅ مسار Lovable الصحيح
 import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { Loader2, User as UserIcon, ChefHat, ShoppingBag } from "lucide-react"; // أيقونات جميلة
@@ -77,8 +78,14 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#FDF6F6] pb-24 pt-8 px-4">
-      <div className="max-w-md mx-auto space-y-8">
-        {/* رأس الصفحة */}
+      <div className="max-w-md mx-auto space-y-8">       
+      <button 
+        onClick={() => navigate('/')} 
+        className="absolute top-6 right-6 p-3 bg-white/80 backdrop-blur-md rounded-full shadow-sm border border-white/50 text-gray-700 hover:bg-white transition-all z-50"
+      >
+        <ArrowRight className="w-6 h-6" />
+      </button>
+      {/* 👆 نهاية زر الرجوع 👆 */}
         <div className="text-center space-y-2">
           <div className="relative inline-block">
             <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto border-4 border-white">
