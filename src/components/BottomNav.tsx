@@ -1,127 +1,85 @@
-import { Home, Search, Heart, User, LayoutDashboard } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { Home, Search, Heart, User, ChefHat } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const baseNavItems = [
-  { icon: Home, label: "الرئيسية", path: "/home" },
-  { icon: Search, label: "بحث", path: "/search" },
-  { icon: Heart, label: "المفضلة", path: "/favorites" },
-  { icon: User, label: "حسابي", path: "/profile" },
-];
-
-const sellerNavItem = { icon: LayoutDashboard, label: "لوحتي", path: "/dashboard" };
 
 export const BottomNav = () => {
   const location = useLocation();
-  const [isSeller, setIsSeller] = useState(false);
 
-  useEffect(() => {
-    const checkUserRole = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        setIsSeller(profile?.role === "seller");
-      }
-    };
+  // 1. جلب الدور بذكاء (نفس المفتاح 'profile' لضمان التزامن مع صفحة البروفايل)
+  const { data: profile } = useQuery({
+    queryKey: ["profile"], // ⚠️ مهم جداً: هذا المفتاح يربط هذا المكون بصفحة البروفايل
+    queryFn: async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return null;
 
-    checkUserRole();
+      const { data, error } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .maybeSingle();
-          
-          setIsSeller(profile?.role === "seller");
-        } else {
-          setIsSeller(false);
-        }
-      }
-    );
+      if (error) return null;
+      return data;
+    },
+    staleTime: Infinity, // نحتفظ بالبيانات ولا نعيد الطلب إلا عند التعديل اليدوي (invalidate)
+  });
 
-    return () => subscription.unsubscribe();
-  }, []);
+  const isSeller = profile?.role === "seller";
 
-  // Build nav items based on role
-  const navItems = isSeller 
-    ? [...baseNavItems.slice(0, 3), sellerNavItem, baseNavItems[3]]
-    : baseNavItems;
-
-  // دالة الاهتزاز (Haptic Feedback)
-  const handleNavClick = () => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(15);
-    }
-  };
+  // وظيفة لتحديد هل الزر نشط أم لا
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav pb-6 pt-2 border-t border-white/20 md:hidden">
-      <div className="flex items-center justify-around px-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+    <div className="fixed bottom-6 left-4 right-4 z-50">
+      <nav className="mx-auto max-w-md bg-white/80 backdrop-blur-xl border border-white/40 shadow-lg rounded-2xl px-2 py-3 flex justify-around items-center transition-all duration-300">
+        {/* الرئيسية */}
+        <Link
+          to="/"
+          className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive("/") ? "text-primary scale-110" : "text-gray-400 hover:text-gray-600"}`}
+        >
+          <Home className={`w-6 h-6 ${isActive("/") && "fill-current"}`} />
+          <span className="text-[10px] font-medium">الرئيسية</span>
+        </Link>
 
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={handleNavClick}
-              className="relative flex flex-col items-center justify-center w-16 h-14"
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="nav-active-glow"
-                  className="absolute inset-0 bg-accent/10 rounded-2xl -z-10"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              )}
+        {/* البحث */}
+        <Link
+          to="/search"
+          className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive("/search") ? "text-primary scale-110" : "text-gray-400 hover:text-gray-600"}`}
+        >
+          <Search className="w-6 h-6" strokeWidth={2.5} />
+          <span className="text-[10px] font-medium">بحث</span>
+        </Link>
 
-              <motion.div
-                animate={{
-                  scale: isActive ? 1.1 : 1,
-                  y: isActive ? -2 : 0,
-                }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <item.icon
-                  className={cn(
-                    "h-6 w-6 transition-colors duration-300",
-                    isActive
-                      ? "text-accent stroke-[2.5px]"
-                      : "text-muted-foreground/80 stroke-2",
-                  )}
-                />
-              </motion.div>
+        {/* المفضلة */}
+        <Link
+          to="/favorites"
+          className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive("/favorites") ? "text-primary scale-110" : "text-gray-400 hover:text-gray-600"}`}
+        >
+          <Heart className={`w-6 h-6 ${isActive("/favorites") && "fill-current"}`} />
+          <span className="text-[10px] font-medium">المفضلة</span>
+        </Link>
 
-              <motion.span
-                animate={{
-                  opacity: isActive ? 1 : 0.7,
-                  scale: isActive ? 1 : 0.9,
-                }}
-                className={cn(
-                  "text-[10px] font-medium mt-1 transition-colors duration-300",
-                  isActive ? "text-accent" : "text-muted-foreground",
-                )}
-              >
-                {item.label}
-              </motion.span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+        {/* ✨ الزر السحري: يظهر فقط للبائع ✨ */}
+        {isSeller && (
+          <Link
+            to="/dashboard"
+            className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive("/dashboard") ? "text-orange-500 scale-110" : "text-gray-400 hover:text-orange-400"}`}
+          >
+            <div className={`p-1 rounded-full ${isActive("/dashboard") ? "bg-orange-100" : ""}`}>
+              <ChefHat className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-medium text-orange-600">لوحتي</span>
+          </Link>
+        )}
+
+        {/* حسابي */}
+        <Link
+          to="/profile"
+          className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive("/profile") ? "text-primary scale-110" : "text-gray-400 hover:text-gray-600"}`}
+        >
+          <User className={`w-6 h-6 ${isActive("/profile") && "fill-current"}`} />
+          <span className="text-[10px] font-medium">حسابي</span>
+        </Link>
+      </nav>
+    </div>
   );
 };
